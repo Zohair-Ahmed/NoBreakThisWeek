@@ -8,9 +8,6 @@ The following is a set of guidelines for contributing to NoBreakThisWeek. These 
 
 #### Table Of Contents
 
-
-[I don't want to read this whole thing, I just have a question!!!](#i-dont-want-to-read-this-whole-thing-i-just-have-a-question)
-
 [What should I know before I get started?](#what-should-i-know-before-i-get-started)
   * [NoBreakThisWeek Design Decisions](#design-decisions)
 
@@ -24,15 +21,6 @@ The following is a set of guidelines for contributing to NoBreakThisWeek. These 
   * [JavaScript Styleguide](#javascript-styleguide)
 
 [Additional Notes](#additional-notes)
-
-## I don't want to read this whole thing I just have a question!!!
-
-> **Note:** [Please don't file an issue to ask a question.](https://blog.atom.io/2016/04/19/managing-the-deluge-of-atom-issues.html) You'll get faster results by using the resources below.
-
-We have an official message board with a detailed FAQ and where the community chimes in with helpful advice if you have questions.
-
-* [Github Discussions, the official Atom message board](https://github.com/atom/atom/discussions)
-* [Atom FAQ](https://flight-manual.atom.io/faq/)
 
 ## What should I know before I get started?
 
