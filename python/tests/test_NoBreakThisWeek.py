@@ -34,7 +34,7 @@ class TestNoBreakThisWeek(unittest.TestCase):
         """Asserts equal if the link for the chapter is \"/chapters/2301/one-piece-chapter-1051\""""
         with open("./utils/mock_opLatestCh.html", "r") as f:
             mockLatestCh = BeautifulSoup(f, "html.parser")
-        self.assertEqual(getLatestChapterLink(mockLatestCh.find("a")), "/chapters/2301/one-piece-chapter-1051")
+        self.assertEqual(getLatestChapterLink(mockLatestCh.find("a")), "https://onepiecechapters.com/chapters/2301/one-piece-chapter-1051/chapters/2301/one-piece-chapter-1051")
 
 if __name__ == '__main__':
     unittest.main()
