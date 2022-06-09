@@ -7,6 +7,7 @@ import os
 from pymongo import MongoClient
 import requests
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 
 load_dotenv(find_dotenv())
 
@@ -20,8 +21,8 @@ CLUSTER_NAME = os.environ.get('CLUSTER_NAME')
 COLLECTION_NAME = os.environ.get('COLLECTION_NAME')
 connection_string = f"mongodb+srv://nobreakthisweek:{MONGODB_PASSWORD}@nobreakthisweek.dapsuc9.mongodb.net/?retryWrites=true&w=majority"
 mongoClient = MongoClient(connection_string)
-db = mongoClient[CLUSTER_NAME]
-collection = db[COLLECTION_NAME]
+db = mongoClient["dev"]
+collection = db["data"]
 collectionID = 0
 
 # twilio info
@@ -35,7 +36,7 @@ twilioClient = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 def getChapterStatus(opStatusCard):
     """Get the status of the next chapter"""
-    return opStatusCard.find(class_="w-full text-center text-white px-2 rounded-full").text
+    return opStatusCard.find(class_="bg-gray rounded-full text-xs").text
 
 
 def getLatestChapterTitle(opLatestCh):
@@ -91,12 +92,15 @@ def updateOPInfo_released(opLatestNumber, opLatestTitle, opStatus, opLatestChLin
 
 
 def sendTwilioMessage(messageBody):
-    twilioClient.messages.create(
+    try:
+        twilioClient.messages.create(
         body=messageBody,
         from_=TWILIO_PHONE_NUMBER,
         to=MY_PHONE_NUMBER,
         messaging_service_sid=MESSAGING_SERVICE_SID
     )
+    except TwilioRestException as e:
+        print(e)
 
 
 # get status specific information
@@ -139,5 +143,5 @@ if web_opStatus != db_opStatus:
         updateOPInfo_released(
             web_opLatestNumber, web_opLatestTitle, web_opStatus, web_opLatestChLink)
 else:
-    sendTwilioMessage("NoBreakThisWeek: No new chapter yet... but soon")
+    sendTwilioMessage(db_latestOpInfo["status"])
     quit()
