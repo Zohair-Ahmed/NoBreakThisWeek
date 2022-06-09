@@ -1,23 +1,36 @@
+from email import message
+from lib2to3.pgen2.token import OP
 from multiprocessing import connection
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv, find_dotenv
 import os
 from pymongo import MongoClient
 import requests
+from twilio.rest import Client
 
 load_dotenv(find_dotenv())
 
+# basic One Piece info
 opTitle = "One Piece"
-baseUrl = "https://onepiecechapters.com"
-collectionID = 0
+baseUrl = os.environ.get('BASE_URL')
 
+# MongoDB info
 MONGODB_PASSWORD = os.environ.get('MONGODB_PASSWORD')
 CLUSTER_NAME = os.environ.get('CLUSTER_NAME')
 COLLECTION_NAME = os.environ.get('COLLECTION_NAME')
 connection_string = f"mongodb+srv://nobreakthisweek:{MONGODB_PASSWORD}@nobreakthisweek.dapsuc9.mongodb.net/?retryWrites=true&w=majority"
-client = MongoClient(connection_string)
-db = client[CLUSTER_NAME]
+mongoClient = MongoClient(connection_string)
+db = mongoClient[CLUSTER_NAME]
 collection = db[COLLECTION_NAME]
+collectionID = 0
+
+# twilio info
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+MY_PHONE_NUMBER = os.environ.get('MY_PHONE_NUMBER')
+MESSAGING_SERVICE_SID = os.environ.get('MESSAGING_SERVICE_SID')
+twilioClient = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 def getChapterStatus(opStatusCard):
@@ -43,11 +56,11 @@ def getLatestChapterLink(opLatestCh):
 def postOPInfo(opStatus, opLatestNumber, opLatestTitle, opLatestChLink):
     """Getting the data collected to parse to JSON, which is sent to MongoDB"""
     webData = {
-        "_id" : collectionID,
-        "chapter-num" : opLatestNumber,
-        "title" : opLatestTitle,
-        "status" : opStatus,
-        "link" : opLatestChLink
+        "_id": collectionID,
+        "chapter-num": opLatestNumber,
+        "title": opLatestTitle,
+        "status": opStatus,
+        "link": opLatestChLink
     }
 
     return webData
@@ -61,20 +74,30 @@ def getOPInfo():
 
 def updateOPInfo_translating(opStatus):
     """Update the One Piece info to now say the a chapter is being translated"""
-    statusUpdate = { "$set": {"status": opStatus} }
+    statusUpdate = {"$set": {"status": opStatus}}
     collection.update_one({"_id": collectionID}, statusUpdate)
 
 
 def updateOPInfo_released(opLatestNumber, opLatestTitle, opStatus, opLatestChLink):
     """Update the chapter number, title, and link to match just release chapter"""
     replaceInfo = {
-        "chapter-num" : opLatestNumber,
-        "title" : opLatestTitle,
-        "status" : opStatus,
-        "link" : opLatestChLink
+        "chapter-num": opLatestNumber,
+        "title": opLatestTitle,
+        "status": opStatus,
+        "link": opLatestChLink
     }
 
-    collection.replace_one({"_id" : collectionID}, replaceInfo)
+    collection.replace_one({"_id": collectionID}, replaceInfo)
+
+
+def sendTwilioMessage(messageBody):
+    twilioClient.messages.create(
+        body=messageBody,
+        from_=TWILIO_PHONE_NUMBER,
+        to=MY_PHONE_NUMBER,
+        messaging_service_sid=MESSAGING_SERVICE_SID
+    )
+
 
 # get status specific information
 getStatusUrl = baseUrl + "/projects"
@@ -109,10 +132,12 @@ db_opLatestChLink = db_latestOpInfo["link"]
 if web_opStatus != db_opStatus:
     # if there are been no update to chapter number, it is translating, else the chapter has been released
     if web_opLatestNumber == db_opLatestNumber:
-        print(f"The next chapter is now being translated!")
         updateOPInfo_translating(web_opStatus)
+        sendTwilioMessage("The next chapter is now being translated!")
     else:
-        print(f"{web_opLatestNumber} is now released!")
-        updateOPInfo_released(web_opLatestNumber, web_opLatestTitle, web_opStatus, web_opLatestChLink)
+        sendTwilioMessage("NEW ONE PIECE CHAPTER!!")
+        updateOPInfo_released(
+            web_opLatestNumber, web_opLatestTitle, web_opStatus, web_opLatestChLink)
 else:
+    sendTwilioMessage("NoBreakThisWeek: No new chapter yet... but soon")
     quit()
