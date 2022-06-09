@@ -9,6 +9,7 @@ from NoBreakThisWeek import getChapterStatus, getLatestChapterTitle, getLatestCh
 class TestNoBreakThisWeek(unittest.TestCase):
     """Unit testing for NoBreakThisWeek.py"""
 
+
     def test_getChapterStatus(self):
         """Asserts equal if the status of the HTML div is \"Waiting For Next Chapter\""""
         with open("./utils/mock_opStatusCard.html", "r") as f:

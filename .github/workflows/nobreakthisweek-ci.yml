@@ -1,0 +1,26 @@
+name: Run web scraper
+
+on:
+  schedule:
+  - cron: "*/5 17-23 * * 4" # Thursdays 12pm - 11:59pm (EST equiv)
+  - cron: "*/5 0-11 * * 5" # Fridays 12am - 6am (EST equiv)
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository content
+        uses: actions/checkout@v2 # Checkout the repository content to github runner.
+
+      - name: Setup Python Version
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8 # Install the python version needed
+
+      - name: Install Python dependencies
+        run: python -m pip3 install --upgrade pip3 requests
+
+      - name: Execute Python script # Run the run.py to get the latest data
+        run: python3 ./python/NoBreakThisWeek.py
